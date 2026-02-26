@@ -6,16 +6,36 @@
   "entry": "index.js",
   "description": "Real-time system monitoring widget — CPU, memory, battery, disk, and network stats",
   "author": "MyWallpapers",
+  "authorUrl": "https://github.com/rayandu924",
   "license": "MIT",
-  "keywords": ["system", "monitor", "cpu", "memory", "battery", "network"],
-  "categories": ["utilities", "system"],
+  "repositoryUrl": "https://github.com/rayandu924/mywallpaper-system-monitor",
+  "keywords": [
+    "system",
+    "monitor",
+    "cpu",
+    "memory",
+    "battery",
+    "network"
+  ],
+  "categories": [
+    "utilities",
+    "system"
+  ],
   "capabilities": {
     "hotReload": true,
-    "systemEvents": ["viewport:resize"]
+    "systemEvents": [
+      "viewport:resize"
+    ]
   },
   "permissions": {
     "system": {
-      "capabilities": ["cpu", "memory", "battery", "disk", "network"]
+      "capabilities": [
+        "cpu",
+        "memory",
+        "battery",
+        "disk",
+        "network"
+      ]
     }
   },
   "settings": {
@@ -52,9 +72,18 @@
       "type": "select",
       "label": "Refresh Rate",
       "options": [
-        { "label": "3 seconds", "value": "3s" },
-        { "label": "5 seconds", "value": "5s" },
-        { "label": "10 seconds", "value": "10s" }
+        {
+          "label": "3 seconds",
+          "value": "3s"
+        },
+        {
+          "label": "5 seconds",
+          "value": "5s"
+        },
+        {
+          "label": "10 seconds",
+          "value": "10s"
+        }
       ],
       "default": "3s"
     },
