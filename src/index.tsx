@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useRef } from 'react'
 import { useSettings, useViewport, useSystem } from '@mywallpaper/sdk-react'
 import './styles.css'
 
@@ -28,27 +28,12 @@ export default function SystemMonitor() {
   const settings = useSettings<Partial<Settings>>()
   const { width, height } = useViewport()
   const systemData = useSystem() as SystemInfo
-  const [lastUpdate, setLastUpdate] = useState(Date.now())
-  const updateTimerRef = useRef<NodeJS.Timeout>()
-
-  // Parse refresh interval
-  const getRefreshMs = () => {
-    const interval = (settings.refreshInterval || '3s') as string
-    const ms = parseInt(interval) * 1000
-    return ms
-  }
-
-  // Trigger update tick for UI refresh
+  // Track last update time via ref — updates when systemData changes (pushed by SDK)
+  // without causing extra re-renders from a setInterval timer.
+  const lastUpdateRef = useRef(Date.now())
   useEffect(() => {
-    const ms = getRefreshMs()
-    updateTimerRef.current = setInterval(() => {
-      setLastUpdate(Date.now())
-    }, ms)
-
-    return () => {
-      if (updateTimerRef.current) clearInterval(updateTimerRef.current)
-    }
-  }, [settings.refreshInterval])
+    lastUpdateRef.current = Date.now()
+  }, [systemData])
 
   const bg = settings.backgroundColor || '#1a1a2e'
   const text = settings.textColor || '#00ff88'
@@ -288,7 +273,7 @@ export default function SystemMonitor() {
           marginTop: '4px',
         }}
       >
-        Updated: {new Date(lastUpdate).toLocaleTimeString()}
+        Updated: {new Date(lastUpdateRef.current).toLocaleTimeString()}
       </div>
     </div>
   )

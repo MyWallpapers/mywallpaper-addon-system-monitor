@@ -1,42 +1,18 @@
 {
   "name": "System Monitor",
-  "version": "1.0.0",
-  "sdkVersion": "2.17.1",
-  "renderMode": "native",
+  "version": "1.0.1",
   "entry": "index.js",
   "description": "Real-time system monitoring widget — CPU, memory, battery, disk, and network stats",
   "author": "MyWallpapers",
-  "authorUrl": "https://github.com/rayandu924",
+  "homepage": "https://github.com/MyWallpapers/mywallpaper-system-monitor",
   "license": "MIT",
-  "repositoryUrl": "https://github.com/rayandu924/mywallpaper-system-monitor",
-  "keywords": [
-    "system",
-    "monitor",
-    "cpu",
-    "memory",
-    "battery",
-    "network"
-  ],
+  "repository": "https://github.com/MyWallpapers/mywallpaper-system-monitor",
   "categories": [
     "utilities",
     "system"
   ],
-  "capabilities": {
-    "hotReload": true,
-    "systemEvents": [
-      "viewport:resize"
-    ]
-  },
   "permissions": {
-    "system": {
-      "capabilities": [
-        "cpu",
-        "memory",
-        "battery",
-        "disk",
-        "network"
-      ]
-    }
+    "system": true
   },
   "settings": {
     "displaySection": {
