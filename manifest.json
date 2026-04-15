@@ -1,6 +1,6 @@
 {
   "name": "System Monitor",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "entry": "index.js",
   "description": "Real-time system monitoring widget — CPU, memory, battery, disk, and network stats",
   "author": "MyWallpapers",
@@ -17,78 +17,102 @@
   "settings": {
     "displaySection": {
       "type": "section",
-      "label": "Display Options"
+      "content": {
+        "label": "Display Options"
+      }
     },
     "showCPU": {
       "type": "boolean",
-      "label": "Show CPU",
-      "default": true
+      "content": {
+        "label": "Show CPU",
+        "default": true
+      }
     },
     "showMemory": {
       "type": "boolean",
-      "label": "Show Memory",
-      "default": true
+      "content": {
+        "label": "Show Memory",
+        "default": true
+      }
     },
     "showBattery": {
       "type": "boolean",
-      "label": "Show Battery",
-      "default": true
+      "content": {
+        "label": "Show Battery",
+        "default": true
+      }
     },
     "showDisk": {
       "type": "boolean",
-      "label": "Show Disk",
-      "default": false
+      "content": {
+        "label": "Show Disk",
+        "default": false
+      }
     },
     "showNetwork": {
       "type": "boolean",
-      "label": "Show Network",
-      "default": false
+      "content": {
+        "label": "Show Network",
+        "default": false
+      }
     },
     "refreshInterval": {
       "type": "select",
-      "label": "Refresh Rate",
-      "options": [
-        {
-          "label": "3 seconds",
-          "value": "3s"
-        },
-        {
-          "label": "5 seconds",
-          "value": "5s"
-        },
-        {
-          "label": "10 seconds",
-          "value": "10s"
-        }
-      ],
-      "default": "3s"
+      "content": {
+        "label": "Refresh Rate",
+        "options": [
+          {
+            "label": "3 seconds",
+            "value": "3s"
+          },
+          {
+            "label": "5 seconds",
+            "value": "5s"
+          },
+          {
+            "label": "10 seconds",
+            "value": "10s"
+          }
+        ],
+        "default": "3s"
+      }
     },
     "themeSection": {
       "type": "section",
-      "label": "Theme"
+      "content": {
+        "label": "Theme"
+      }
     },
     "backgroundColor": {
       "type": "color",
-      "label": "Background",
-      "default": "#1a1a2e"
+      "content": {
+        "label": "Background",
+        "default": "#1a1a2e"
+      }
     },
     "textColor": {
       "type": "color",
-      "label": "Text Color",
-      "default": "#00ff88"
+      "content": {
+        "label": "Text Color",
+        "default": "#00ff88"
+      }
     },
     "accentColor": {
       "type": "color",
-      "label": "Accent Color",
-      "default": "#00ccff"
+      "content": {
+        "label": "Accent Color",
+        "default": "#00ccff"
+      }
     },
     "transparency": {
       "type": "range",
-      "label": "Transparency",
-      "min": 0,
-      "max": 1,
-      "step": 0.1,
-      "default": 0.85
+      "content": {
+        "label": "Transparency",
+        "min": 0,
+        "max": 1,
+        "step": 0.1,
+        "default": 0.85
+      }
     }
   },
   "defaultLayout": {
