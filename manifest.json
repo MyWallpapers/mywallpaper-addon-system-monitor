@@ -1,6 +1,6 @@
 {
   "name": "System Monitor",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "entry": "index.js",
   "description": "Real-time system monitoring widget — CPU, memory, battery, disk, and network stats",
   "author": "MyWallpapers",
