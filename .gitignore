@@ -1,0 +1,14 @@
+node_modules/
+native/companion/target/
+native/out/
+public/__mywallpaper/native/
+!dist/
+dist/*
+!dist/index.html
+!dist/assets/
+!dist/assets/**
+.DS_Store
+*.log
+.env
+.idea/
+.vscode/

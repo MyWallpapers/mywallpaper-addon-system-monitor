@@ -1,126 +1,83 @@
 {
+  "runtime": "trusted-native-canvas-v1",
   "name": "System Monitor",
-  "version": "1.0.3",
-  "entry": "index.js",
-  "description": "Real-time system monitoring widget — CPU, memory, battery, disk, and network stats",
-  "author": "MyWallpapers",
+  "version": "2.0.0",
+  "entry": "dist/index.html",
   "homepage": "https://github.com/MyWallpapers/mywallpaper-addon-system-monitor",
-  "license": "MIT",
   "repository": "https://github.com/MyWallpapers/mywallpaper-addon-system-monitor",
-  "categories": [
-    "utilities",
-    "system"
-  ],
-  "permissions": {
-    "system": true
-  },
   "settings": {
-    "displaySection": {
+    "display": {
       "type": "section",
-      "content": {
-        "label": "Display Options"
-      }
+      "label": "Displayed hardware"
     },
-    "showCPU": {
+    "showCpu": {
       "type": "boolean",
-      "content": {
-        "label": "Show CPU",
-        "default": true
-      }
+      "label": "CPU",
+      "default": true
     },
     "showMemory": {
       "type": "boolean",
-      "content": {
-        "label": "Show Memory",
-        "default": true
-      }
+      "label": "Memory",
+      "default": true
     },
-    "showBattery": {
+    "showGpu": {
       "type": "boolean",
-      "content": {
-        "label": "Show Battery",
-        "default": true
-      }
-    },
-    "showDisk": {
-      "type": "boolean",
-      "content": {
-        "label": "Show Disk",
-        "default": false
-      }
-    },
-    "showNetwork": {
-      "type": "boolean",
-      "content": {
-        "label": "Show Network",
-        "default": false
-      }
+      "label": "GPU",
+      "default": true
     },
     "refreshInterval": {
       "type": "select",
-      "content": {
-        "label": "Refresh Rate",
-        "options": [
-          {
-            "label": "3 seconds",
-            "value": "3s"
-          },
-          {
-            "label": "5 seconds",
-            "value": "5s"
-          },
-          {
-            "label": "10 seconds",
-            "value": "10s"
-          }
-        ],
-        "default": "3s"
-      }
+      "label": "Refresh rate",
+      "default": "1s",
+      "options": [
+        { "label": "1 second", "value": "1s" },
+        { "label": "2 seconds", "value": "2s" },
+        { "label": "5 seconds", "value": "5s" }
+      ]
     },
-    "themeSection": {
+    "appearance": {
       "type": "section",
-      "content": {
-        "label": "Theme"
-      }
+      "label": "Appearance"
     },
     "backgroundColor": {
       "type": "color",
-      "content": {
-        "label": "Background",
-        "default": "#1a1a2e"
-      }
+      "label": "Background",
+      "default": "#10131a"
     },
     "textColor": {
       "type": "color",
-      "content": {
-        "label": "Text Color",
-        "default": "#00ff88"
-      }
+      "label": "Text",
+      "default": "#e7edf7"
     },
     "accentColor": {
       "type": "color",
-      "content": {
-        "label": "Accent Color",
-        "default": "#00ccff"
-      }
+      "label": "Accent",
+      "default": "#61dafb"
     },
-    "transparency": {
+    "opacity": {
       "type": "range",
-      "content": {
-        "label": "Transparency",
-        "min": 0,
-        "max": 1,
-        "step": 0.1,
-        "default": 0.85
-      }
+      "label": "Panel opacity",
+      "min": 0.2,
+      "max": 1,
+      "step": 0.05,
+      "default": 0.9
     }
   },
   "defaultLayout": {
     "xPercent": 2,
     "yPercent": 2,
-    "widthPercent": 20,
-    "heightPercent": 35,
+    "widthPercent": 24,
+    "heightPercent": 34,
     "rotation": 0
+  },
+  "native": {
+    "companion": {
+      "runtime": "process-v1",
+      "entries": {
+        "windows-x86_64": "native/out/windows-x86_64/bin/backend.exe",
+        "windows-aarch64": "native/out/windows-aarch64/bin/backend.exe"
+      }
+    }
   },
   "ui": {
     "pointerEvents": "none"

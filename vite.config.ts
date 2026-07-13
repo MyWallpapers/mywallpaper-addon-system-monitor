@@ -1,6 +1,14 @@
 import { defineConfig } from 'vite'
-import { widgetPlugin } from '@mywallpaper/vite-plugin'
 
 export default defineConfig({
-  plugins: [widgetPlugin()],
+  base: './',
+  build: {
+    outDir: 'dist',
+    emptyOutDir: true,
+  },
+  server: {
+    host: '127.0.0.1',
+    port: 5179,
+    strictPort: true,
+  },
 })

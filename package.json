@@ -1,20 +1,17 @@
 {
   "name": "mywallpaper-addon-system-monitor",
-  "version": "1.0.3",
+  "version": "2.0.0",
   "private": true,
   "type": "module",
+  "packageManager": "pnpm@11.12.0",
   "scripts": {
     "build": "vite build",
-    "dev": "vite build --watch",
-    "serve": "npx serve dist --cors -l 5173",
-    "type-check": "tsc --noEmit"
+    "dev": "vite --host 127.0.0.1 --port 5179",
+    "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
-    "@mywallpaper/sdk-react": "file:../../MyWallpaper/packages/sdk-react",
-    "@mywallpaper/vite-plugin": "file:../MyWallpaper/packages/vite-plugin",
-    "@types/react": "^19.0.0",
-    "react": "^19.0.0",
-    "typescript": "^5.7.0",
-    "vite": "^7.3.2"
+    "@types/node": "^22.20.1",
+    "typescript": "~5.8.3",
+    "vite": "^7.3.6"
   }
 }
