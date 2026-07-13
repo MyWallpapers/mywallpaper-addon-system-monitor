@@ -1,7 +1,7 @@
 {
   "runtime": "trusted-native-canvas-v1",
   "name": "System Monitor",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "entry": "dist/index.html",
   "homepage": "https://github.com/MyWallpapers/mywallpaper-addon-system-monitor",
   "repository": "https://github.com/MyWallpapers/mywallpaper-addon-system-monitor",
@@ -72,7 +72,7 @@
   },
   "native": {
     "companion": {
-      "runtime": "process-v1",
+      "runtime": "process-v2",
       "entries": {
         "windows-x86_64": "native/out/windows-x86_64/bin/backend.exe",
         "windows-aarch64": "native/out/windows-aarch64/bin/backend.exe"
