@@ -1,7 +1,9 @@
 node_modules/
+native/generated/
 native/companion/target/
 native/out/
 public/__mywallpaper/native/
+.mywallpaper-hooks.tmp-*/
 !dist/
 dist/*
 !dist/index.html
