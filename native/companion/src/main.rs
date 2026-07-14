@@ -20,7 +20,7 @@ use windows::Win32::System::Performance::{
 use windows::Win32::System::SystemInformation::{GlobalMemoryStatusEx, MEMORYSTATUSEX};
 use windows::Win32::System::Threading::GetSystemTimes;
 
-const PROTOCOL_VERSION: u32 = 1;
+const PROTOCOL_VERSION: u32 = 2;
 const MAX_FRAME_BYTES: usize = 1024 * 1024;
 
 #[derive(Deserialize)]
@@ -39,7 +39,13 @@ enum HostFrame {
         layer_settings: Value,
     },
     #[serde(rename = "message")]
-    Message { v: u32 },
+    Message {
+        v: u32,
+        #[serde(rename = "surface")]
+        _surface: RendererSurface,
+        #[serde(rename = "payload")]
+        _payload: Value,
+    },
     #[serde(rename = "shutdown")]
     Shutdown { v: u32 },
 }
@@ -50,13 +56,30 @@ enum CompanionFrame<T: Serialize> {
     #[serde(rename = "ready")]
     Ready { v: u32 },
     #[serde(rename = "message")]
-    Message { v: u32, payload: T },
+    Message {
+        v: u32,
+        target: MessageTarget,
+        payload: T,
+    },
     #[serde(rename = "error")]
     Error {
         v: u32,
         message: String,
         code: String,
     },
+}
+
+#[derive(Deserialize)]
+#[serde(rename_all = "kebab-case")]
+enum RendererSurface {
+    Interface,
+    Wallpaper,
+}
+
+#[derive(Serialize)]
+#[serde(rename_all = "kebab-case")]
+enum MessageTarget {
+    Broadcast,
 }
 
 #[derive(Serialize)]
@@ -120,16 +143,24 @@ struct CpuTimes {
 struct GpuAdapter {
     name: String,
     dedicated_total_bytes: u64,
+    luid: AdapterLuid,
+}
+
+#[derive(Clone, Copy, PartialEq, Eq)]
+struct AdapterLuid {
+    high: u32,
+    low: u32,
 }
 
 struct GpuUtilization {
     query: PDH_HQUERY,
     counter: PDH_HCOUNTER,
+    adapter_luid: AdapterLuid,
 }
 
 fn main() -> Result<(), String> {
-    if std::env::var("MYWALLPAPER_PROTOCOL").as_deref() != Ok("process-v1") {
-        return Err("MYWALLPAPER_PROTOCOL must be process-v1".to_owned());
+    if std::env::var("MYWALLPAPER_PROTOCOL").as_deref() != Ok("process-v2") {
+        return Err("MYWALLPAPER_PROTOCOL must be process-v2".to_owned());
     }
 
     let output = Arc::new(Mutex::new(io::stdout()));
@@ -150,23 +181,23 @@ fn main() -> Result<(), String> {
         let version = match &frame {
             HostFrame::Init { v, .. }
             | HostFrame::Settings { v, .. }
-            | HostFrame::Message { v }
+            | HostFrame::Message { v, .. }
             | HostFrame::Shutdown { v } => *v,
         };
         if version != PROTOCOL_VERSION {
-            write_frame(
+            write_companion_error(
                 &output,
-                &CompanionFrame::<Value>::Error {
-                    v: PROTOCOL_VERSION,
-                    message: format!("unsupported protocol version {version}"),
-                    code: "protocol-version".to_owned(),
-                },
+                "protocol-version",
+                format!("unsupported protocol version {version}"),
             )?;
             break;
         }
         match frame {
             HostFrame::Init { layer_settings, .. } if !initialized => {
-                set_interval(&control, &layer_settings);
+                if let Err(message) = set_interval(&control, &layer_settings) {
+                    write_companion_error(&output, "settings-invalid", message)?;
+                    break;
+                }
                 write_frame(
                     &output,
                     &CompanionFrame::<Value>::Ready {
@@ -181,18 +212,18 @@ fn main() -> Result<(), String> {
                 }));
             }
             HostFrame::Settings { layer_settings, .. } if initialized => {
-                set_interval(&control, &layer_settings);
+                if let Err(message) = set_interval(&control, &layer_settings) {
+                    write_companion_error(&output, "settings-invalid", message)?;
+                    break;
+                }
             }
             HostFrame::Message { .. } if initialized => {}
             HostFrame::Shutdown { .. } => break,
             _ => {
-                write_frame(
+                write_companion_error(
                     &output,
-                    &CompanionFrame::<Value>::Error {
-                        v: PROTOCOL_VERSION,
-                        message: "invalid companion lifecycle frame".to_owned(),
-                        code: "protocol-state".to_owned(),
-                    },
+                    "protocol-state",
+                    "invalid companion lifecycle frame".to_owned(),
                 )?;
                 break;
             }
@@ -226,6 +257,7 @@ fn run_sampler(control: Arc<(Mutex<Control>, Condvar)>, output: Arc<Mutex<io::St
             &output,
             &CompanionFrame::Message {
                 v: PROTOCOL_VERSION,
+                target: MessageTarget::Broadcast,
                 payload,
             },
         ) {
@@ -254,10 +286,14 @@ fn run_sampler(control: Arc<(Mutex<Control>, Condvar)>, output: Arc<Mutex<io::St
 
 impl Sampler {
     fn new() -> Self {
+        let gpu = GpuAdapter::discover();
+        let gpu_utilization = gpu
+            .as_ref()
+            .and_then(|adapter| GpuUtilization::open(adapter.luid));
         Self {
             previous_cpu: None,
-            gpu: GpuAdapter::discover(),
-            gpu_utilization: GpuUtilization::open(),
+            gpu,
+            gpu_utilization,
         }
     }
 
@@ -317,6 +353,10 @@ impl GpuAdapter {
                 return Some(Self {
                     name: String::from_utf16_lossy(&description.Description[..end]),
                     dedicated_total_bytes: description.DedicatedVideoMemory as u64,
+                    luid: AdapterLuid {
+                        high: description.AdapterLuid.HighPart as u32,
+                        low: description.AdapterLuid.LowPart,
+                    },
                 });
             }
         }
@@ -325,7 +365,7 @@ impl GpuAdapter {
 }
 
 impl GpuUtilization {
-    fn open() -> Option<Self> {
+    fn open(adapter_luid: AdapterLuid) -> Option<Self> {
         unsafe {
             let mut query = PDH_HQUERY::default();
             if PdhOpenQueryW(PCWSTR::null(), 0, &mut query) != 0 {
@@ -346,7 +386,11 @@ impl GpuUtilization {
                 PdhCloseQuery(query);
                 return None;
             }
-            Some(Self { query, counter })
+            Some(Self {
+                query,
+                counter,
+                adapter_luid,
+            })
         }
     }
 
@@ -396,11 +440,9 @@ impl GpuUtilization {
                     continue;
                 }
                 let name = item.szName.to_string().ok()?;
-                let engine = name
-                    .find("_luid_")
-                    .map(|index| &name[index..])
-                    .unwrap_or(name.as_str())
-                    .to_owned();
+                let Some(engine) = gpu_engine_key(&name, self.adapter_luid) else {
+                    continue;
+                };
                 *engines.entry(engine).or_default() += value;
             }
             engines
@@ -409,6 +451,19 @@ impl GpuUtilization {
                 .map(|value| value.clamp(0.0, 100.0))
         }
     }
+}
+
+fn gpu_engine_key(instance_name: &str, adapter_luid: AdapterLuid) -> Option<String> {
+    let normalized = instance_name.to_ascii_lowercase();
+    let marker_index = normalized.find("_luid_")?;
+    // GPU Engine instances encode the DXGI LUID as high and low hexadecimal tokens.
+    let mut luid_parts = normalized[marker_index + "_luid_".len()..].split('_');
+    let high = u32::from_str_radix(luid_parts.next()?.strip_prefix("0x")?, 16).ok()?;
+    let low = u32::from_str_radix(luid_parts.next()?.strip_prefix("0x")?, 16).ok()?;
+    if (AdapterLuid { high, low }) != adapter_luid {
+        return None;
+    }
+    Some(normalized[marker_index..].to_owned())
 }
 
 impl Drop for GpuUtilization {
@@ -465,17 +520,24 @@ fn memory_sample() -> Result<MemorySample, String> {
     }
 }
 
-fn set_interval(control: &Arc<(Mutex<Control>, Condvar)>, settings: &Value) {
+fn set_interval(control: &Arc<(Mutex<Control>, Condvar)>, settings: &Value) -> Result<(), String> {
     let interval = match settings.get("refreshInterval").and_then(Value::as_str) {
+        Some("1s") => Duration::from_secs(1),
         Some("5s") => Duration::from_secs(5),
         Some("2s") => Duration::from_secs(2),
-        _ => Duration::from_secs(1),
+        _ => {
+            return Err(
+                "refreshInterval must be one of the manifest values: 1s, 2s, or 5s".to_owned(),
+            )
+        }
     };
     let (lock, wake) = &**control;
-    if let Ok(mut state) = lock.lock() {
-        state.interval = interval;
-        wake.notify_all();
-    }
+    let mut state = lock
+        .lock()
+        .map_err(|_| "control lock poisoned while applying settings".to_owned())?;
+    state.interval = interval;
+    wake.notify_all();
+    Ok(())
 }
 
 fn read_frame<T: for<'de> Deserialize<'de>>(reader: &mut impl Read) -> io::Result<Option<T>> {
@@ -512,4 +574,19 @@ fn write_frame<T: Serialize>(output: &Arc<Mutex<io::Stdout>>, value: &T) -> Resu
         .and_then(|()| output.write_all(&payload))
         .and_then(|()| output.flush())
         .map_err(|error| error.to_string())
+}
+
+fn write_companion_error(
+    output: &Arc<Mutex<io::Stdout>>,
+    code: &str,
+    message: String,
+) -> Result<(), String> {
+    write_frame(
+        output,
+        &CompanionFrame::<Value>::Error {
+            v: PROTOCOL_VERSION,
+            message,
+            code: code.to_owned(),
+        },
+    )
 }
