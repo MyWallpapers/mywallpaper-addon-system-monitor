@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=1280,height=720">
+<title>System Monitor thumbnail</title>
+<style>
+  * { box-sizing: border-box }
+  html, body { width: 1280px; height: 720px; margin: 0; overflow: hidden }
+  body {
+    position: relative; color: #e9f4ff; font-family: Inter, "Segoe UI", sans-serif;
+    background:
+      radial-gradient(circle at 15% 12%, rgb(73 142 255 / 35%), transparent 33%),
+      radial-gradient(circle at 86% 88%, rgb(71 227 199 / 22%), transparent 40%),
+      #071019;
+  }
+  .grid { position: absolute; inset: 0; opacity: .23; background-image: linear-gradient(rgb(255 255 255 / 5%) 1px, transparent 1px), linear-gradient(90deg, rgb(255 255 255 / 5%) 1px, transparent 1px); background-size: 40px 40px; mask-image: linear-gradient(to right, black, transparent 72%) }
+  .copy { position: absolute; left: 72px; top: 86px; width: 450px }
+  .eyebrow { color: #61dafb; font-size: 17px; font-weight: 700; letter-spacing: .2em; text-transform: uppercase }
+  h1 { margin: 14px 0 16px; font-size: 64px; line-height: 1; letter-spacing: -.045em }
+  p { margin: 0; color: rgb(231 244 255 / 68%); font-size: 21px; line-height: 1.5 }
+  .chips { display: flex; gap: 10px; margin-top: 28px }
+  .chip { padding: 9px 13px; border: 1px solid rgb(255 255 255 / 12%); border-radius: 999px; background: rgb(255 255 255 / 6%); color: rgb(237 248 255 / 80%); font-size: 14px }
+  .panel { position: absolute; right: 72px; top: 65px; width: 570px; height: 590px; padding: 34px; border: 1px solid rgb(255 255 255 / 13%); border-radius: 32px; background: rgb(12 18 28 / 82%); box-shadow: 0 38px 100px rgb(0 0 0 / 52%); backdrop-filter: blur(24px) }
+  header { display: flex; justify-content: space-between; align-items: start; margin-bottom: 30px }
+  header small { color: #61dafb; font-size: 12px; font-weight: 800; letter-spacing: .18em }
+  header h2 { margin: 7px 0 0; font-size: 29px; letter-spacing: -.03em }
+  .live { display: flex; align-items: center; gap: 8px; padding: 8px 12px; border: 1px solid rgb(105 230 155 / 22%); border-radius: 999px; color: #8ff0b6; background: rgb(105 230 155 / 8%); font-size: 13px }
+  .live i { width: 7px; height: 7px; border-radius: 50%; background: #69e69b; box-shadow: 0 0 13px #69e69b }
+  article { margin-bottom: 29px; padding: 19px 20px; border: 1px solid rgb(255 255 255 / 8%); border-radius: 18px; background: rgb(255 255 255 / 4%) }
+  .metric { display: flex; align-items: baseline; justify-content: space-between }
+  .metric span { color: rgb(232 244 255 / 66%); font-size: 15px }
+  .metric strong { font-size: 26px; font-variant-numeric: tabular-nums }
+  .track { height: 8px; margin: 14px 0 11px; overflow: hidden; border-radius: 10px; background: rgb(255 255 255 / 8%) }
+  .bar { height: 100%; border-radius: inherit; background: linear-gradient(90deg, #3f8cff, #61dafb); box-shadow: 0 0 18px rgb(97 218 251 / 45%) }
+  article:nth-child(2) .bar { width: 47% } article:nth-child(3) .bar { width: 62% } article:nth-child(4) .bar { width: 28% }
+  article small { color: rgb(232 244 255 / 45%); font-size: 12px }
+</style>
+<body>
+  <div class="grid"></div>
+  <div class="copy"><div class="eyebrow">Live hardware telemetry</div><h1>System<br>Monitor</h1><p>A focused Canvas panel backed by an open-source native companion for reliable Windows metrics.</p><div class="chips"><span class="chip">CPU</span><span class="chip">Memory</span><span class="chip">GPU</span></div></div>
+  <section class="panel"><header><div><small>SYSTEM</small><h2>Performance</h2></div><span class="live"><i></i> Live</span></header>
+    <article><div class="metric"><span>CPU</span><strong>47%</strong></div><div class="track"><div class="bar"></div></div><small>16 logical processors</small></article>
+    <article><div class="metric"><span>Memory</span><strong>62%</strong></div><div class="track"><div class="bar"></div></div><small>19.8 GB of 32.0 GB</small></article>
+    <article><div class="metric"><span>GPU</span><strong>28%</strong></div><div class="track"><div class="bar"></div></div><small>8.0 GB dedicated memory</small></article>
+  </section>
+</body>
+</html>

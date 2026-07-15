@@ -20,7 +20,7 @@ use windows::Win32::System::Performance::{
 use windows::Win32::System::SystemInformation::{GlobalMemoryStatusEx, MEMORYSTATUSEX};
 use windows::Win32::System::Threading::GetSystemTimes;
 
-const PROTOCOL_VERSION: u32 = 2;
+const PROTOCOL_VERSION: u32 = 3;
 const MAX_FRAME_BYTES: usize = 1024 * 1024;
 
 #[derive(Deserialize)]
@@ -30,13 +30,17 @@ enum HostFrame {
     Init {
         v: u32,
         #[serde(rename = "layerSettings")]
-        layer_settings: Value,
+        _layer_settings: Value,
+        #[serde(rename = "deviceSettings")]
+        device_settings: Value,
     },
     #[serde(rename = "settings")]
     Settings {
         v: u32,
         #[serde(rename = "layerSettings")]
-        layer_settings: Value,
+        _layer_settings: Value,
+        #[serde(rename = "deviceSettings")]
+        device_settings: Value,
     },
     #[serde(rename = "message")]
     Message {
@@ -193,8 +197,10 @@ fn main() -> Result<(), String> {
             break;
         }
         match frame {
-            HostFrame::Init { layer_settings, .. } if !initialized => {
-                if let Err(message) = set_interval(&control, &layer_settings) {
+            HostFrame::Init {
+                device_settings, ..
+            } if !initialized => {
+                if let Err(message) = set_interval(&control, &device_settings) {
                     write_companion_error(&output, "settings-invalid", message)?;
                     break;
                 }
@@ -211,8 +217,10 @@ fn main() -> Result<(), String> {
                     run_sampler(thread_control, thread_output)
                 }));
             }
-            HostFrame::Settings { layer_settings, .. } if initialized => {
-                if let Err(message) = set_interval(&control, &layer_settings) {
+            HostFrame::Settings {
+                device_settings, ..
+            } if initialized => {
+                if let Err(message) = set_interval(&control, &device_settings) {
                     write_companion_error(&output, "settings-invalid", message)?;
                     break;
                 }

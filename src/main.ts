@@ -1,14 +1,18 @@
 import './styles.css'
+import type { JsonValue, NativeConnection } from '../generated/mywallpaper-runtime'
 
 interface Settings {
   showCpu: boolean
   showMemory: boolean
   showGpu: boolean
-  refreshInterval: '1s' | '2s' | '5s'
   backgroundColor: string
   textColor: string
   accentColor: string
   opacity: number
+}
+
+interface DeviceSettings {
+  refreshInterval: '1s' | '2s' | '5s'
 }
 
 interface SystemSample {
@@ -27,15 +31,14 @@ const defaults: Settings = {
   showCpu: true,
   showMemory: true,
   showGpu: true,
-  refreshInterval: '1s',
   backgroundColor: '#10131a',
   textColor: '#e7edf7',
   accentColor: '#61dafb',
   opacity: 0.9,
 }
+const deviceDefaults: DeviceSettings = { refreshInterval: '1s' }
 
 const layer = window.MyWallpaper.layer
-layer.setPointerEvents('none')
 const root = layer.root
 root.className = 'monitor-root'
 root.innerHTML = `
@@ -72,6 +75,7 @@ const metrics = required<HTMLElement>('.metrics')
 const connectionBadge = required<HTMLElement>('.connection')
 const updatedTime = required<HTMLTimeElement>('time')
 let settings = readSettings(layer.settings.get())
+let deviceSettings = readDeviceSettings(layer.deviceSettings.get())
 let latestSample: SystemSample | null = null
 let nativeConnection: NativeConnection | null = null
 let lastError: string | null = null
@@ -82,12 +86,15 @@ const stopSettings = layer.settings.subscribe((next) => {
   applySettings(settings)
   if (latestSample) renderSample(latestSample)
 })
+const stopDeviceSettings = layer.deviceSettings.subscribe((next) => {
+  deviceSettings = readDeviceSettings(next)
+})
 
 void connectNative()
 
 const freshnessTimer = window.setInterval(() => {
   if (!latestSample || nativeConnection?.state !== 'open') return
-  const staleAfter = intervalMs(settings.refreshInterval) * 3 + 1_000
+  const staleAfter = intervalMs(deviceSettings.refreshInterval) * 3 + 1_000
   if (Date.now() - latestSample.capturedAtUnixMs > staleAfter) {
     showFeedback('Live hardware data stopped updating. The companion is still connected; retry the add-on if this persists.', 'warning')
   }
@@ -96,6 +103,7 @@ const freshnessTimer = window.setInterval(() => {
 layer.lifecycle.onDispose(() => {
   window.clearInterval(freshnessTimer)
   stopSettings()
+  stopDeviceSettings()
   nativeConnection?.close()
 })
 
@@ -138,6 +146,9 @@ function receiveNativeMessage(payload: JsonValue): void {
   const sample = payload as unknown as SystemSample
   lastError = null
   latestSample = sample
+  if (window.MyWallpaper.runtime.instance.canonical) {
+    window.MyWallpaper.bus.emit('mywallpaper.hardware/v1/metrics', payload)
+  }
   renderSample(sample)
 }
 
@@ -184,12 +195,17 @@ function readSettings(value: Record<string, JsonValue>): Settings {
     showCpu: typeof value['showCpu'] === 'boolean' ? value['showCpu'] : defaults.showCpu,
     showMemory: typeof value['showMemory'] === 'boolean' ? value['showMemory'] : defaults.showMemory,
     showGpu: typeof value['showGpu'] === 'boolean' ? value['showGpu'] : defaults.showGpu,
-    refreshInterval: value['refreshInterval'] === '2s' || value['refreshInterval'] === '5s'
-      ? value['refreshInterval'] : defaults.refreshInterval,
     backgroundColor: typeof value['backgroundColor'] === 'string' ? value['backgroundColor'] : defaults.backgroundColor,
     textColor: typeof value['textColor'] === 'string' ? value['textColor'] : defaults.textColor,
     accentColor: typeof value['accentColor'] === 'string' ? value['accentColor'] : defaults.accentColor,
     opacity: typeof value['opacity'] === 'number' ? clamp(value['opacity'], 0.2, 1) : defaults.opacity,
+  }
+}
+
+function readDeviceSettings(value: Record<string, JsonValue>): DeviceSettings {
+  return {
+    refreshInterval: value['refreshInterval'] === '2s' || value['refreshInterval'] === '5s'
+      ? value['refreshInterval'] : deviceDefaults.refreshInterval,
   }
 }
 
@@ -238,7 +254,7 @@ function required<TElement extends Element>(selector: string): TElement {
   return element
 }
 
-function intervalMs(interval: Settings['refreshInterval']): number {
+function intervalMs(interval: DeviceSettings['refreshInterval']): number {
   return interval === '5s' ? 5_000 : interval === '2s' ? 2_000 : 1_000
 }
 
