@@ -1,33 +1,47 @@
 {
-  "runtime": "trusted-native-canvas-v1",
+  "runtime": "canvas-v1",
   "name": "System Monitor",
-  "version": "2.0.1",
+  "description": "Shows live CPU, memory and GPU telemetry from its open-source native companion in a customizable Canvas panel.",
+  "version": "3.0.0",
   "entry": "dist/index.html",
-  "homepage": "https://github.com/MyWallpapers/mywallpaper-addon-system-monitor",
-  "repository": "https://github.com/MyWallpapers/mywallpaper-addon-system-monitor",
-  "settings": {
-    "display": {
+  "thumbnail": "assets/thumbnail.png",
+  "deviceSettingsVersion": "1",
+  "ui": {
+    "pointerEvents": "none"
+  },
+  "settings": [
+    {
+      "id": "display",
       "type": "section",
       "label": "Displayed hardware"
     },
-    "showCpu": {
+    {
+      "id": "showCpu",
       "type": "boolean",
       "label": "CPU",
+      "scope": "layer",
       "default": true
     },
-    "showMemory": {
+    {
+      "id": "showMemory",
       "type": "boolean",
       "label": "Memory",
+      "scope": "layer",
       "default": true
     },
-    "showGpu": {
+    {
+      "id": "showGpu",
       "type": "boolean",
       "label": "GPU",
+      "scope": "layer",
       "default": true
     },
-    "refreshInterval": {
+    {
+      "id": "refreshInterval",
       "type": "select",
       "label": "Refresh rate",
+      "description": "Shared by every System Monitor instance on this device.",
+      "scope": "device",
       "default": "1s",
       "options": [
         { "label": "1 second", "value": "1s" },
@@ -35,41 +49,43 @@
         { "label": "5 seconds", "value": "5s" }
       ]
     },
-    "appearance": {
+    {
+      "id": "appearance",
       "type": "section",
       "label": "Appearance"
     },
-    "backgroundColor": {
+    {
+      "id": "backgroundColor",
       "type": "color",
       "label": "Background",
+      "scope": "layer",
       "default": "#10131a"
     },
-    "textColor": {
+    {
+      "id": "textColor",
       "type": "color",
       "label": "Text",
+      "scope": "layer",
       "default": "#e7edf7"
     },
-    "accentColor": {
+    {
+      "id": "accentColor",
       "type": "color",
       "label": "Accent",
+      "scope": "layer",
       "default": "#61dafb"
     },
-    "opacity": {
+    {
+      "id": "opacity",
       "type": "range",
       "label": "Panel opacity",
+      "scope": "layer",
       "min": 0.2,
       "max": 1,
       "step": 0.05,
       "default": 0.9
     }
-  },
-  "defaultLayout": {
-    "xPercent": 2,
-    "yPercent": 2,
-    "widthPercent": 24,
-    "heightPercent": 34,
-    "rotation": 0
-  },
+  ],
   "native": {
     "companion": {
       "runtime": "process-v2",
@@ -78,8 +94,5 @@
         "windows-aarch64": "native/out/windows-aarch64/bin/backend.exe"
       }
     }
-  },
-  "ui": {
-    "pointerEvents": "none"
   }
 }

@@ -1,20 +1,25 @@
 # System Monitor
 
 A MyWallpaper Canvas add-on backed by one supervised Windows `process-v2`
-companion per layer. It displays live CPU utilization, physical-memory usage,
+companion per release digest. It displays live CPU utilization, physical-memory usage,
 and GPU engine utilization without injecting code into another process.
 
-The companion uses only standard Windows APIs, receives layer settings from
-the same manifest-backed source as Canvas, and changes its sampling interval
-without restarting. Canvas reports connection, reconnection, stale-data and
+The companion uses only standard Windows APIs and receives only the validated
+`device` settings shared by every instance. Layer presentation settings remain
+inside Canvas. It changes its sampling interval without restarting, while
+Canvas reports connection, reconnection, stale-data and
 sampling failures directly in the widget. Missing or unknown refresh intervals
 fail the companion session with a visible `settings-invalid` error instead of
 silently changing the requested rate.
 
 It implements MyWallpaper's
 [surface-aware companion protocol v2](https://github.com/MyWallpapers/MyWallpaper/blob/main/docs/native-addons.md#companion-protocol-v2),
-broadcasting each hardware sample to both the wallpaper and interface views of
-the same layer.
+broadcasting each hardware sample to every visual instance of the release. Only
+the canonical visual instance can send commands back to the companion.
+That canonical instance also publishes the validated sample on
+`mywallpaper.hardware/v1/metrics`, so other layers can reuse the telemetry
+through the bounded scene bus without starting another sampler or duplicating
+events on repeated displays.
 
 ## Development
 
@@ -27,9 +32,15 @@ pnpm dev
 
 For the complete native preview, run `mywallpaper dev` from this directory
 with the released `@mywallpaper/cli`, enable Developer Mode in MyWallpaper
-Desktop, then load the loopback URL shown by the CLI. Official tags use
-MyWallpaper's reusable OIDC workflow to rebuild x64 and ARM64 executables from
-source; binaries are not committed.
+Desktop, then load the loopback URL shown by the CLI. Published GitHub releases
+use MyWallpaper's reusable OIDC workflow to rebuild x64 and ARM64 executables
+from source; binaries and web `dist/` output are not committed. Publishing
+creates a candidate identified by its SemVer and digest; promotion and
+recommendation are separate, and installed releases never auto-update.
+
+Run `mywallpaper generate` after a Canvas contract update and commit the
+resulting `generated/mywallpaper-runtime.d.ts`. The official verifier
+regenerates it and rejects missing or stale declarations.
 
 ## Native boundary
 
