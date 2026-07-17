@@ -1,8 +1,10 @@
 # System Monitor
 
 A MyWallpaper Canvas add-on backed by one supervised Windows `process-v2`
-companion per release digest. It displays live CPU utilization, physical-memory usage,
-and GPU engine utilization without injecting code into another process.
+companion per scene layer. Its interface and wallpaper renderers are two
+surfaces of that same native session. It displays live CPU utilization,
+physical-memory usage and GPU engine utilization without injecting code into
+another process.
 
 The companion uses only standard Windows APIs and receives only the validated
 `device` settings shared by every instance. Layer presentation settings remain
@@ -12,14 +14,18 @@ sampling failures directly in the widget. Missing or unknown refresh intervals
 fail the companion session with a visible `settings-invalid` error instead of
 silently changing the requested rate.
 
-It implements MyWallpaper's
-[surface-aware companion protocol v2](https://github.com/MyWallpapers/MyWallpaper/blob/main/docs/native-addons.md#companion-protocol-v2),
-broadcasting each hardware sample to every visual instance of the release. Only
-the canonical visual instance can send commands back to the companion.
+It implements MyWallpaper's wire protocol v4 for the `process-v2` runtime,
+including the artifact identity supplied at initialization and the explicit
+surface, instance and display identity attached to renderer messages. See the
+[native add-on protocol](https://github.com/MyWallpapers/MyWallpaper/blob/dev/docs/native-addons.md#companion-wire-protocol-v4).
+The companion broadcasts each hardware sample to every visual instance of the
+release. Only the canonical visual instance can send commands back to the
+companion.
 That canonical instance also publishes the validated sample on
 `mywallpaper.hardware/v1/metrics`, so other layers can reuse the telemetry
-through the bounded scene bus without starting another sampler or duplicating
-events on repeated displays.
+through the scene-local JSON bus without starting another sampler or
+duplicating events on repeated displays. MyWallpaper applies no behavioral
+size or frequency quota to this local bus.
 
 ## Development
 
