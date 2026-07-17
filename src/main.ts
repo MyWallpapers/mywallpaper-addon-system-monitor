@@ -147,7 +147,7 @@ function receiveNativeMessage(payload: JsonValue): void {
   lastError = null
   latestSample = sample
   if (window.MyWallpaper.runtime.instance.canonical) {
-    window.MyWallpaper.bus.emit('mywallpaper.hardware/v1/metrics', payload)
+    layer.bus.emit('mywallpaper.hardware/v1/metrics', payload)
   }
   renderSample(sample)
 }

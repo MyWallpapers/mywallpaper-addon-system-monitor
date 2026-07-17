@@ -20,7 +20,7 @@ use windows::Win32::System::Performance::{
 use windows::Win32::System::SystemInformation::{GlobalMemoryStatusEx, MEMORYSTATUSEX};
 use windows::Win32::System::Threading::GetSystemTimes;
 
-const PROTOCOL_VERSION: u32 = 3;
+const PROTOCOL_VERSION: u32 = 4;
 const MAX_FRAME_BYTES: usize = 1024 * 1024;
 
 #[derive(Deserialize)]
@@ -29,6 +29,16 @@ enum HostFrame {
     #[serde(rename = "init")]
     Init {
         v: u32,
+        #[serde(rename = "addonId")]
+        _addon_id: String,
+        #[serde(rename = "artifactDigest")]
+        _artifact_digest: String,
+        #[serde(rename = "version")]
+        _version: String,
+        #[serde(rename = "targetArchitecture")]
+        _target_architecture: TargetArchitecture,
+        #[serde(rename = "scratchDirectory")]
+        _scratch_directory: String,
         #[serde(rename = "layerSettings")]
         _layer_settings: Value,
         #[serde(rename = "deviceSettings")]
@@ -47,6 +57,10 @@ enum HostFrame {
         v: u32,
         #[serde(rename = "surface")]
         _surface: RendererSurface,
+        #[serde(rename = "instanceId")]
+        _instance_id: String,
+        #[serde(rename = "displayIndex")]
+        _display_index: u32,
         #[serde(rename = "payload")]
         _payload: Value,
     },
@@ -78,6 +92,14 @@ enum CompanionFrame<T: Serialize> {
 enum RendererSurface {
     Interface,
     Wallpaper,
+}
+
+#[derive(Debug, Deserialize, PartialEq, Eq)]
+enum TargetArchitecture {
+    #[serde(rename = "windows-x86_64")]
+    WindowsX86_64,
+    #[serde(rename = "windows-aarch64")]
+    WindowsAarch64,
 }
 
 #[derive(Serialize)]
@@ -597,4 +619,84 @@ fn write_companion_error(
             code: code.to_owned(),
         },
     )
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use serde_json::json;
+
+    #[test]
+    fn protocol_v4_init_carries_verified_runtime_identity() {
+        let frame: HostFrame = serde_json::from_value(json!({
+            "type": "init",
+            "v": 4,
+            "addonId": "system-monitor",
+            "artifactDigest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "version": "3.1.0",
+            "targetArchitecture": "windows-x86_64",
+            "scratchDirectory": "C:\\runtime\\system-monitor",
+            "layerSettings": { "showCpu": true },
+            "deviceSettings": { "refreshInterval": "1s" }
+        }))
+        .expect("current init frame must deserialize");
+
+        match frame {
+            HostFrame::Init {
+                v,
+                _addon_id,
+                _artifact_digest,
+                _version,
+                _target_architecture,
+                _scratch_directory,
+                device_settings,
+                ..
+            } => {
+                assert_eq!(v, PROTOCOL_VERSION);
+                assert_eq!(_addon_id, "system-monitor");
+                assert_eq!(_version, "3.1.0");
+                assert_eq!(_target_architecture, TargetArchitecture::WindowsX86_64);
+                assert_eq!(device_settings["refreshInterval"], "1s");
+                assert!(_artifact_digest.starts_with("sha256:"));
+                assert!(_scratch_directory.ends_with("system-monitor"));
+            }
+            _ => panic!("expected init frame"),
+        }
+    }
+
+    #[test]
+    fn protocol_v4_renderer_message_keeps_surface_and_instance_identity() {
+        let frame: HostFrame = serde_json::from_value(json!({
+            "type": "message",
+            "v": 4,
+            "surface": "wallpaper",
+            "instanceId": "layer-a@display-2",
+            "displayIndex": 2,
+            "payload": { "command": "sample" }
+        }))
+        .expect("current renderer message must deserialize");
+
+        match frame {
+            HostFrame::Message {
+                v,
+                _instance_id,
+                _display_index,
+                ..
+            } => {
+                assert_eq!(v, PROTOCOL_VERSION);
+                assert_eq!(_instance_id, "layer-a@display-2");
+                assert_eq!(_display_index, 2);
+            }
+            _ => panic!("expected message frame"),
+        }
+    }
+
+    #[test]
+    fn companion_frames_announce_protocol_v4() {
+        let value = serde_json::to_value(CompanionFrame::<Value>::Ready {
+            v: PROTOCOL_VERSION,
+        })
+        .expect("ready frame must serialize");
+        assert_eq!(value, json!({ "type": "ready", "v": 4 }));
+    }
 }
